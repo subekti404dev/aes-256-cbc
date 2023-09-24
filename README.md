@@ -46,7 +46,7 @@ const currIv = aes.getCurrentIV();
 
 const plainText = 'test123';
 const encryptedText = aes.encrypt(plainText);
-const decryptedText = aes.encrypt(encryptedText);
+const decryptedText = aes.decrypt(encryptedText);
 
 console.log({ encryptedText, decryptedText });
 

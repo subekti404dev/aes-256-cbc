@@ -1,6 +1,6 @@
 {
   "name": "aes256cbc-enc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "simple aes-256-cbc encryption utilities",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
