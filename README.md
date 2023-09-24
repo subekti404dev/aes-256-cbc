@@ -1,5 +1,5 @@
-[![view on npm](http://img.shields.io/npm/v/aes-256-cbc.svg)](https://www.npmjs.org/package/aes-256-cbc)
-[![npm module downloads per month](http://img.shields.io/npm/dm/aes-256-cbc.svg)](https://www.npmjs.org/package/aes-256-cbc)
+[![view on npm](http://img.shields.io/npm/v/aes256cbc-enc.svg)](https://www.npmjs.org/package/aes256cbc-enc)
+[![npm module downloads per month](http://img.shields.io/npm/dm/aes256cbc-enc.svg)](https://www.npmjs.org/package/aes256cbc-enc)
 
 # AES 256 CBC
 
@@ -8,19 +8,19 @@ Simple aes-256-cbc encryption tools
 ## How to Install
 
 ```bash
-npm install aes-256-cbc
+npm install aes256cbc-enc
 # or
-yarn add aes-256-cbc
+yarn add aes256cbc-enc
 ```
 
 ## How to Use
 
 ```javascript
 // in common JS
-const { Aes256Cbc, generateKey, generateIV } = require("aes-256-cbc");
+const { Aes256Cbc, generateKey, generateIV } = require("aes256cbc-enc");
 
 // in typescript
-import { Aes256Cbc, generateKey, generateIV } from "aes-256-cbc";
+import { Aes256Cbc, generateKey, generateIV } from "aes256cbc-enc";
 
 // generate random key and random iv
 const key = generateKey();
