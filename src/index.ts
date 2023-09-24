@@ -75,8 +75,8 @@ class Aes256Cbc {
   }
 }
 
-const generateKey: () => string = cryptoModule.randomBytes(32).toString("hex");
-const generateIV: () => string = cryptoModule.randomBytes(16).toString("hex");
+const generateKey: () => string = () => cryptoModule.randomBytes(32).toString("hex");
+const generateIV: () => string = () => cryptoModule.randomBytes(16).toString("hex");
 
 module.exports = {
   Aes256Cbc,
