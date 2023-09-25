@@ -1,4 +1,4 @@
-import CryptoJS from "crypto-js";
+import CryptoES from "crypto-es";
 
 interface IAes256Cbc {
   key?: string;
@@ -10,24 +10,24 @@ interface IOpts {
 }
 
 const generateKey = () =>
-  CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex);
+  CryptoES.lib.WordArray.random(32).toString(CryptoES.enc.Hex);
 class Aes256Cbc {
-  _key: CryptoJS.lib.WordArray;
+  _key: CryptoES.lib.WordArray | undefined;
 
   constructor({ key, rawKey }: IAes256Cbc) {
     if (rawKey) {
-      const strHexKey = CryptoJS.SHA256(rawKey)
-        .toString(CryptoJS.enc.Hex)
+      const strHexKey = CryptoES.SHA256(rawKey)
+        .toString(CryptoES.enc.Hex)
         .substring(0, 64);
-      this._key = CryptoJS.enc.Hex.parse(strHexKey);
+      this._key = CryptoES.enc.Hex.parse(strHexKey);
     }
     if (key) {
-      this._key = CryptoJS.enc.Hex.parse(key);
+      this._key = CryptoES.enc.Hex.parse(key);
     }
   }
 
   encrypt(text: string | object, opts: IOpts = {}): string {
-    const iv = CryptoJS.lib.WordArray.random(16);
+    const iv = CryptoES.lib.WordArray.random(16);
     let textToEncrypt;
     if (typeof text === "string") textToEncrypt = text;
 
@@ -39,33 +39,33 @@ class Aes256Cbc {
       }
     }
 
-    const encryptedData = CryptoJS.AES.encrypt(textToEncrypt, this._key, {
+    const encryptedData = CryptoES.AES.encrypt(textToEncrypt as string, this._key as any, {
       iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7,
+      mode: CryptoES.mode.CBC,
+      padding: CryptoES.pad.Pkcs7,
     });
 
     const encryptedText = iv
-      .concat(encryptedData.ciphertext)
-      .toString(CryptoJS.enc.Hex);
+      .concat(encryptedData.ciphertext as any)
+      .toString(CryptoES.enc.Hex);
     return encryptedText;
   }
 
   decrypt(text: string, opts: IOpts = {}): string | object {
-    const encryptedData = CryptoJS.enc.Hex.parse(text);
+    const encryptedData = CryptoES.enc.Hex.parse(text);
     const iv = encryptedData.clone();
     iv.sigBytes = 16;
 
     encryptedData.words.splice(0, 4);
     encryptedData.sigBytes -= 16;
 
-    const decryptedData = CryptoJS.AES.decrypt(
+    const decryptedData = CryptoES.AES.decrypt(
       { ciphertext: encryptedData } as any,
-      this._key,
-      { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+      this._key as any,
+      { iv: iv, mode: CryptoES.mode.CBC, padding: CryptoES.pad.Pkcs7 }
     );
 
-    let decrypted = decryptedData.toString(CryptoJS.enc.Utf8);
+    let decrypted = decryptedData.toString(CryptoES.enc.Utf8);
     if (opts.isJSON) {
       try {
         decrypted = JSON.parse(decrypted);
@@ -77,7 +77,7 @@ class Aes256Cbc {
   }
 
   getCurrentKey() {
-    return this._key.toString(CryptoJS.enc.Hex);
+    return this._key?.toString(CryptoES.enc.Hex);
   }
 }
 
