@@ -5,6 +5,10 @@ interface IAes256Cbc {
   rawKey?: string;
 }
 
+interface IOpts {
+  isJSON?: boolean;
+}
+
 const generateKey = () =>
   CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex);
 class Aes256Cbc {
@@ -22,10 +26,20 @@ class Aes256Cbc {
     }
   }
 
-  encrypt(text: string): string {
+  encrypt(text: string | object, opts: IOpts = {}): string {
     const iv = CryptoJS.lib.WordArray.random(16);
+    let textToEncrypt;
+    if (typeof text === "string") textToEncrypt = text;
 
-    const encryptedData = CryptoJS.AES.encrypt(text, this._key, {
+    if (opts.isJSON) {
+      try {
+        textToEncrypt = JSON.stringify(text);
+      } catch (error) {
+        throw new Error("Invalid JSON");
+      }
+    }
+
+    const encryptedData = CryptoJS.AES.encrypt(textToEncrypt, this._key, {
       iv,
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
@@ -37,7 +51,7 @@ class Aes256Cbc {
     return encryptedText;
   }
 
-  decrypt(text: string): string {
+  decrypt(text: string, opts: IOpts = {}): string | object {
     const encryptedData = CryptoJS.enc.Hex.parse(text);
     const iv = encryptedData.clone();
     iv.sigBytes = 16;
@@ -51,8 +65,15 @@ class Aes256Cbc {
       { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
     );
 
-    const decryptedText = decryptedData.toString(CryptoJS.enc.Utf8);
-    return decryptedText;
+    let decrypted = decryptedData.toString(CryptoJS.enc.Utf8);
+    if (opts.isJSON) {
+      try {
+        decrypted = JSON.parse(decrypted);
+      } catch (error) {
+        throw new Error("Invalid JSON");
+      }
+    }
+    return decrypted;
   }
 
   getCurrentKey() {
