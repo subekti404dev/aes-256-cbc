@@ -39,12 +39,21 @@ class Aes256Cbc {
       }
     }
 
-    const encryptedData = CryptoES.AES.encrypt(textToEncrypt as string, this._key as any, {
-      iv,
-      mode: CryptoES.mode.CBC,
-      padding: CryptoES.pad.Pkcs7,
-    });
+    let encryptedData: ReturnType<typeof CryptoES.AES.encrypt>;
 
+    try {
+      encryptedData = CryptoES.AES.encrypt(
+        textToEncrypt as string,
+        this._key as any,
+        {
+          iv,
+          mode: CryptoES.mode.CBC,
+          padding: CryptoES.pad.Pkcs7,
+        }
+      );
+    } catch (error) {
+      throw new Error("Failed to encrypt data");
+    }
     const encryptedText = iv
       .concat(encryptedData.ciphertext as any)
       .toString(CryptoES.enc.Hex);
@@ -58,13 +67,16 @@ class Aes256Cbc {
 
     encryptedData.words.splice(0, 4);
     encryptedData.sigBytes -= 16;
-
-    const decryptedData = CryptoES.AES.decrypt(
-      { ciphertext: encryptedData } as any,
-      this._key as any,
-      { iv: iv, mode: CryptoES.mode.CBC, padding: CryptoES.pad.Pkcs7 }
-    );
-
+    let decryptedData: ReturnType<typeof CryptoES.AES.decrypt>;
+    try {
+      decryptedData = CryptoES.AES.decrypt(
+        { ciphertext: encryptedData } as any,
+        this._key as any,
+        { iv: iv, mode: CryptoES.mode.CBC, padding: CryptoES.pad.Pkcs7 }
+      );
+    } catch (error) {
+      throw new Error("Failed to decrypt data");
+    }
     let decrypted = decryptedData.toString(CryptoES.enc.Utf8);
     if (opts.isJSON) {
       try {
