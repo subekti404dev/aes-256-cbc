@@ -1,5 +1,11 @@
 import CryptoES from "crypto-es";
 
+enum ErrorMessage {
+  InvalidJSON = "Invalid JSON",
+  FailedToEncrypt = "Failed to encrypt data",
+  FailedToDecrypt = "Failed to decrypt data",
+}
+
 interface IAes256Cbc {
   key?: string;
   rawKey?: string;
@@ -27,22 +33,20 @@ class Aes256Cbc {
   }
 
   encrypt(text: string | object, opts: IOpts = {}): string {
-    const iv = CryptoES.lib.WordArray.random(16);
-    let textToEncrypt;
-    if (typeof text === "string") textToEncrypt = text;
-
-    if (opts.isJSON) {
-      try {
-        textToEncrypt = JSON.stringify(text);
-      } catch (error) {
-        throw new Error("Invalid JSON");
-      }
-    }
-
-    let encryptedData: ReturnType<typeof CryptoES.AES.encrypt>;
-
     try {
-      encryptedData = CryptoES.AES.encrypt(
+      const iv = CryptoES.lib.WordArray.random(16);
+      let textToEncrypt;
+      if (typeof text === "string") textToEncrypt = text;
+
+      if (opts.isJSON) {
+        try {
+          textToEncrypt = JSON.stringify(text);
+        } catch (error) {
+          throw new Error(ErrorMessage.InvalidJSON);
+        }
+      }
+
+      const encryptedData = CryptoES.AES.encrypt(
         textToEncrypt as string,
         this._key as any,
         {
@@ -51,41 +55,47 @@ class Aes256Cbc {
           padding: CryptoES.pad.Pkcs7,
         }
       );
+      const encryptedText = iv
+        .concat(encryptedData.ciphertext as any)
+        .toString(CryptoES.enc.Hex);
+      return encryptedText;
     } catch (error) {
-      throw new Error("Failed to encrypt data");
+      if (error.message === ErrorMessage.InvalidJSON) {
+        throw error;
+      }
+      throw new Error(ErrorMessage.FailedToEncrypt);
     }
-    const encryptedText = iv
-      .concat(encryptedData.ciphertext as any)
-      .toString(CryptoES.enc.Hex);
-    return encryptedText;
   }
 
   decrypt(text: string, opts: IOpts = {}): string | object {
-    const encryptedData = CryptoES.enc.Hex.parse(text);
-    const iv = encryptedData.clone();
-    iv.sigBytes = 16;
-
-    encryptedData.words.splice(0, 4);
-    encryptedData.sigBytes -= 16;
-    let decryptedData: ReturnType<typeof CryptoES.AES.decrypt>;
     try {
-      decryptedData = CryptoES.AES.decrypt(
+      const encryptedData = CryptoES.enc.Hex.parse(text);
+      const iv = encryptedData.clone();
+      iv.sigBytes = 16;
+
+      encryptedData.words.splice(0, 4);
+      encryptedData.sigBytes -= 16;
+      const decryptedData = CryptoES.AES.decrypt(
         { ciphertext: encryptedData } as any,
         this._key as any,
         { iv: iv, mode: CryptoES.mode.CBC, padding: CryptoES.pad.Pkcs7 }
       );
-    } catch (error) {
-      throw new Error("Failed to decrypt data");
-    }
-    let decrypted = decryptedData.toString(CryptoES.enc.Utf8);
-    if (opts.isJSON) {
-      try {
-        decrypted = JSON.parse(decrypted);
-      } catch (error) {
-        throw new Error("Invalid JSON");
+
+      let decrypted = decryptedData.toString(CryptoES.enc.Utf8);
+      if (opts.isJSON) {
+        try {
+          decrypted = JSON.parse(decrypted);
+        } catch (error) {
+          throw new Error(ErrorMessage.InvalidJSON);
+        }
       }
+      return decrypted;
+    } catch (error) {
+      if (error.message === ErrorMessage.InvalidJSON) {
+        throw error;
+      }
+      throw new Error(ErrorMessage.FailedToDecrypt);
     }
-    return decrypted;
   }
 
   getCurrentKey() {
