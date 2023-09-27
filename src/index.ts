@@ -89,6 +89,7 @@ class Aes256Cbc {
           throw new Error(ErrorMessage.InvalidJSON);
         }
       }
+      if (!decrypted) throw new Error(ErrorMessage.FailedToDecrypt)
       return decrypted;
     } catch (error) {
       if (error.message === ErrorMessage.InvalidJSON) {
